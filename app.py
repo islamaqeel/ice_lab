@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from flask import (
     Flask,
     flash,
+    jsonify,
     session,
     redirect,
     render_template,
@@ -98,6 +99,38 @@ def create_app() -> Flask:
     @app.get("/resources")
     def resources_page():
         return render_template("resources.html", **common_template_args())
+
+    @app.get("/chat")
+    def chat_page():
+        messages = list_chat_messages(limit=80)
+        return render_template("chat.html", messages=messages, **common_template_args())
+
+    @app.get("/api/chat/messages")
+    def chat_messages_api():
+        after_id_raw = (request.args.get("after_id") or "0").strip()
+        try:
+            after_id = int(after_id_raw)
+        except ValueError:
+            after_id = 0
+        messages = list_chat_messages(after_id=after_id, limit=200)
+        return jsonify({"messages": messages})
+
+    @app.post("/api/chat/send")
+    def chat_send_api():
+        name = (request.form.get("name") or "").strip()
+        message = (request.form.get("message") or "").strip()
+
+        if not name:
+            return jsonify({"ok": False, "error": "name_required"}), 400
+        if not message:
+            return jsonify({"ok": False, "error": "message_required"}), 400
+        if len(name) > 60:
+            return jsonify({"ok": False, "error": "name_too_long"}), 400
+        if len(message) > 1000:
+            return jsonify({"ok": False, "error": "message_too_long"}), 400
+
+        add_chat_message(name=name, message=message)
+        return jsonify({"ok": True})
 
     @app.get("/about")
     def about_page():
@@ -314,6 +347,18 @@ def init_db() -> None:
         )
         conn.execute("CREATE INDEX IF NOT EXISTS idx_announcements_created_at ON announcements(created_at DESC);")
 
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS chat_messages (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              message TEXT NOT NULL,
+              created_at TEXT NOT NULL
+            );
+            """
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created_at DESC);")
+
 
 def is_admin_session() -> bool:
     return bool(session.get("admin_user_id"))
@@ -439,6 +484,44 @@ def list_announcements(limit: int = 50):
             """,
             (int(limit),),
         ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def add_chat_message(name: str, message: str) -> None:
+    with get_db() as conn:
+        conn.execute(
+            """
+            INSERT INTO chat_messages(name, message, created_at)
+            VALUES(?, ?, ?)
+            """,
+            (name, message, now_iso()),
+        )
+
+
+def list_chat_messages(after_id: int = 0, limit: int = 200):
+    with get_db() as conn:
+        if after_id and after_id > 0:
+            rows = conn.execute(
+                """
+                SELECT id, name, message, created_at
+                FROM chat_messages
+                WHERE id > ?
+                ORDER BY id ASC
+                LIMIT ?
+                """,
+                (int(after_id), int(limit)),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT id, name, message, created_at
+                FROM chat_messages
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (int(limit),),
+            ).fetchall()
+            rows = list(reversed(rows))
         return [dict(r) for r in rows]
 
 
