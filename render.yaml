@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: ice-library
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python -m waitress --listen=0.0.0.0:$PORT app:app"
+    autoDeploy: true
+    envVars:
+      - key: ICE_LIBRARY_SECRET_KEY
+        generateValue: true
+      - key: ICE_LIBRARY_DATA_DIR
+        value: /var/data
+      - key: ICE_LIBRARY_ADMIN_USER
+        value: admin
+      - key: ICE_LIBRARY_ADMIN_PASS
+        value: admin123
+disks:
+  - name: ice-library-data
+    mountPath: /var/data
+    sizeGB: 1
+
