@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} · تبليغات{% endblock %}
+
+{% block content %}
+  {% set page_dir = "rtl" %}
+  {% set page_lang = "ar" %}
+
+  <section class="section">
+    <div class="sectionHead">
+      <div class="sectionTitle rtl">تبليغات</div>
+      <div class="sectionMeta rtl">{{ announcements|length }} رسالة</div>
+    </div>
+
+    <div class="card listCard rtl">
+      {% if announcements %}
+        {% for a in announcements %}
+          <div class="listRow">
+            <div class="listMain">
+              <div class="listTitle">{{ a.created_at }}</div>
+              <div class="listSub">
+                {% if a.created_by %}<span class="tag">{{ a.created_by }}</span>{% endif %}
+              </div>
+              <div class="message">{{ a.message }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="muted">لا توجد رسائل بعد.</div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}
+

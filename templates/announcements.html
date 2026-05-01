@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} · تبليغات (Admin){% endblock %}
+
+{% block content %}
+  {% set page_dir = "rtl" %}
+  {% set page_lang = "ar" %}
+
+  <section class="section rtl">
+    <div class="sectionHead">
+      <div class="sectionTitle">تبليغات (للإدارة)</div>
+      <div class="sectionMeta">Logged in as {{ admin_username }}</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="cardTitle">نشر رسالة</div>
+        <form class="form" method="post" action="{{ url_for('announcements_submit') }}">
+          <label class="label">
+            <span>الرسالة</span>
+            <textarea class="input textarea" name="message" rows="5" maxlength="2000" placeholder="..." required></textarea>
+          </label>
+          <button class="btn primary" type="submit">نشر</button>
+          <div class="hint">الحد الأقصى 2000 حرف.</div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="cardTitle">ملاحظة</div>
+        <div class="message">
+          هذه الصفحة فقط للإدارة. الطلاب يمكنهم قراءة التبليغات من صفحة تبليغات العامة.
+        </div>
+        <div style="margin-top: 12px;">
+          <a class="btn small" href="{{ url_for('public_announcements_page') }}">فتح صفحة التبليغات العامة</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section rtl">
+    <div class="sectionHead">
+      <div class="sectionTitle">آخر الرسائل</div>
+      <div class="sectionMeta">{{ announcements|length }} رسالة</div>
+    </div>
+
+    <div class="card listCard">
+      {% if announcements %}
+        {% for a in announcements %}
+          <div class="listRow">
+            <div class="listMain">
+              <div class="listTitle">{{ a.created_at }}</div>
+              <div class="listSub">
+                {% if a.created_by %}<span class="tag">{{ a.created_by }}</span>{% endif %}
+              </div>
+              <div class="message">{{ a.message }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="muted">لا توجد رسائل بعد.</div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}
+

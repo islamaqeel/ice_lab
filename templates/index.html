@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }}{% endblock %}
+
+{% block content %}
+  <div class="card">
+    This page is no longer used. Go to
+    <a class="navLink" href="{{ url_for('home') }}">Home</a>
+    or
+    <a class="navLink" href="{{ url_for('library_page') }}">Library</a>.
+  </div>
+{% endblock %}
+

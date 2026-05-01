@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} · Admin Login{% endblock %}
+
+{% block content %}
+  <section class="section">
+    <div class="sectionHead">
+      <div class="sectionTitle">Admin Login</div>
+      <div class="sectionMeta">For posting تبليغات</div>
+    </div>
+
+    <div class="card">
+      <form class="form" method="post" action="{{ url_for('login_submit') }}">
+        <label class="label">
+          <span>Username</span>
+          <input class="input" name="username" autocomplete="username" required />
+        </label>
+        <label class="label">
+          <span>Password</span>
+          <input class="input" type="password" name="password" autocomplete="current-password" required />
+        </label>
+        <button class="btn primary" type="submit">Sign in</button>
+        <div class="hint">Default: <b>admin / admin123</b></div>
+      </form>
+    </div>
+  </section>
+{% endblock %}
+

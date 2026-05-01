@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} · Resources{% endblock %}
+
+{% block content %}
+  <section class="section">
+    <div class="sectionHead">
+      <div class="sectionTitle">Resources</div>
+      <div class="sectionMeta">Useful links for students</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="cardTitle">Study tips</div>
+        <ul class="simpleList">
+          <li>Use spaced repetition for memorization.</li>
+          <li>Practice with past exams if available.</li>
+          <li>Summarize each lecture in 5 bullet points.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="cardTitle">Quick tools</div>
+        <ul class="simpleList">
+          <li>PDF reader, scanner apps, and cloud storage.</li>
+          <li>Note-taking apps (Markdown works great).</li>
+          <li>Group chat for course announcements.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+

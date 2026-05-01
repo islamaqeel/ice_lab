@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} · Library{% endblock %}
+
+{% block content %}
+  <section class="section">
+    <div class="sectionHead">
+      <div class="sectionTitle">Library</div>
+      <div class="sectionMeta">
+        {% if selected_category %}
+          {{ selected_category }} ·
+        {% endif %}
+        {{ items|length }} item(s)
+      </div>
+    </div>
+
+    <div class="tabs">
+      <a class="tab {% if not selected_category %}active{% endif %}" href="{{ url_for('library_page') }}">All</a>
+      {% for c in categories %}
+        <a class="tab {% if selected_category == c %}active{% endif %}" href="{{ url_for('library_page', cat=c) }}">{{ c }}</a>
+      {% endfor %}
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="cardTitle">Upload a file</div>
+        <form class="form" method="post" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+          <label class="label">
+            <span>Title</span>
+            <input class="input" name="title" placeholder="e.g. Math notes week 3" required />
+          </label>
+          <label class="label">
+            <span>Group</span>
+            <select class="input" name="category" required>
+              <option value="" disabled {% if not selected_category %}selected{% endif %}>Choose group…</option>
+              {% for c in categories %}
+                <option value="{{ c }}" {% if selected_category == c %}selected{% endif %}>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="label">
+            <span>File</span>
+            <input class="input" type="file" name="file" required />
+          </label>
+          <button class="btn primary" type="submit">Upload</button>
+          <div class="hint">Max 50MB · documents + images</div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="cardTitle">Add a URL</div>
+        <form class="form" method="post" action="{{ url_for('add_url') }}">
+          <label class="label">
+            <span>Title</span>
+            <input class="input" name="title" placeholder="e.g. Lecture playlist" required />
+          </label>
+          <label class="label">
+            <span>Group</span>
+            <select class="input" name="category" required>
+              <option value="" disabled {% if not selected_category %}selected{% endif %}>Choose group…</option>
+              {% for c in categories %}
+                <option value="{{ c }}" {% if selected_category == c %}selected{% endif %}>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="label">
+            <span>URL</span>
+            <input class="input" name="url" placeholder="https://..." required />
+          </label>
+          <button class="btn" type="submit">Save URL</button>
+          <div class="hint">Must start with http:// or https://</div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="card listCard">
+      {% if items %}
+        {% for item in items %}
+          <div class="listRow">
+            <div class="listMain">
+              <div class="listTitle">{{ item.title }}</div>
+              <div class="listSub">
+                <span class="tag">{{ item.kind }}</span>
+                {% if item.category %}
+                  <span class="tag">{{ item.category }}</span>
+                {% endif %}
+                <span class="muted">{{ item.created_at }}</span>
+                {% if item.kind == 'file' and item.mime %}
+                  <span class="muted">· {{ item.mime }}</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="listActions">
+              {% if item.kind == 'file' %}
+                <a class="btn small" href="{{ url_for('download', item_id=item.id) }}">Download</a>
+              {% else %}
+                <a class="btn small" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">Open</a>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="muted">No items yet. Upload something to start.</div>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}
+
