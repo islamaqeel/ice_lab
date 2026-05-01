@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} · Chat{% endblock %}
+
+{% block content %}
+  <section class="chatShell">
+    <div class="chatHeader">
+      <div class="chatTitle">Class Chat</div>
+      <div class="chatMeta muted">Telegram-style simple chat (auto updates)</div>
+    </div>
+
+    <div id="chatList" class="chatList" aria-live="polite">
+      {% if messages %}
+        {% for m in messages %}
+          <div class="bubbleRow">
+            <div class="bubble" data-id="{{ m.id }}">
+              <div class="bubbleTop">
+                <div class="bubbleName">{{ m.name }}</div>
+                <div class="bubbleTime muted">{{ m.created_at }}</div>
+              </div>
+              <div class="bubbleText">{{ m.message }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="muted" style="padding: 10px;">No chat messages yet.</div>
+      {% endif %}
+    </div>
+
+    <form id="chatForm" class="chatComposer" method="post" action="{{ url_for('chat_send_api') }}">
+      <input id="chatName" class="input" name="name" maxlength="60" placeholder="Your name" required />
+      <input id="chatMessage" class="input" name="message" maxlength="1000" placeholder="Type a message…" required />
+      <button class="btn primary" type="submit">Send</button>
+    </form>
+  </section>
+
+  <script>
+    const chatList = document.getElementById("chatList");
+    const form = document.getElementById("chatForm");
+    const nameInput = document.getElementById("chatName");
+    const msgInput = document.getElementById("chatMessage");
+
+    const STORAGE_KEY = "ice_library_chat_name";
+    nameInput.value = localStorage.getItem(STORAGE_KEY) || "";
+    nameInput.addEventListener("input", () => localStorage.setItem(STORAGE_KEY, nameInput.value));
+
+    function lastId() {
+      const nodes = chatList.querySelectorAll("[data-id]");
+      if (!nodes.length) return 0;
+      return parseInt(nodes[nodes.length - 1].getAttribute("data-id") || "0", 10) || 0;
+    }
+
+    function appendMessage(m) {
+      const row = document.createElement("div");
+      row.className = "bubbleRow";
+      row.innerHTML = `
+        <div class="bubble" data-id="${m.id}">
+          <div class="bubbleTop">
+            <div class="bubbleName"></div>
+            <div class="bubbleTime muted"></div>
+          </div>
+          <div class="bubbleText"></div>
+        </div>
+      `;
+      row.querySelector(".bubbleName").textContent = m.name;
+      row.querySelector(".bubbleTime").textContent = m.created_at;
+      row.querySelector(".bubbleText").textContent = m.message;
+      chatList.appendChild(row);
+    }
+
+    function scrollToBottom() {
+      chatList.scrollTop = chatList.scrollHeight;
+    }
+
+    async function poll() {
+      try {
+        const after = lastId();
+        const res = await fetch(`{{ url_for('chat_messages_api') }}?after_id=${after}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.messages && data.messages.length) {
+          for (const m of data.messages) appendMessage(m);
+          scrollToBottom();
+        }
+      } catch (e) {}
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = new URLSearchParams();
+      payload.set("name", nameInput.value);
+      payload.set("message", msgInput.value);
+
+      const res = await fetch(`{{ url_for('chat_send_api') }}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: payload.toString(),
+      });
+
+      if (res.ok) {
+        msgInput.value = "";
+        await poll();
+      }
+    });
+
+    scrollToBottom();
+    setInterval(poll, 1500);
+  </script>
+{% endblock %}
+
